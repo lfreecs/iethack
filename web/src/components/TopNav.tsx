@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Wind } from "lucide-react";
 
 const LINKS = [
   { href: "/", key: "mapa", label: "Mapa" },
@@ -14,9 +14,7 @@ export default function TopNav({ active }: Props) {
   return (
     <header className="z-20 flex shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-6 py-3">
       <Link href="/" className="flex items-center gap-3">
-        <span className="grid size-9 place-items-center rounded-xl bg-navy text-cyan">
-          <Wind size={18} />
-        </span>
+        <Image src="/logo.png" alt="" width={40} height={40} unoptimized priority className="size-10 shrink-0" />
         <span>
           <span className="block text-[15px] font-semibold leading-tight tracking-tight text-ink">Origen SO₂</span>
           <span className="block text-[11px] text-muted">Alerta y atribución de episodios de dióxido de azufre · norte de Chile</span>
