@@ -2,7 +2,7 @@
 
 - Minas: rajos de faenas categoria A del atlas de Sernageomin (data/raw/sernageomin/rajos_categoria_a.json).
 - Fuentes: establecimientos del RETC con SO2 o NOx relevante (data/processed/retc_so2_nox.json).
-- Estaciones: las de SINCA que miden SO2 (data/processed/episodios_so2.json).
+- Estaciones: las de SINCA que miden SO2 y La Negra, de SNIFA (data/processed/episodios_so2.json).
 - Localidades: ciudades y pueblos de OpenStreetMap dentro de una comuna chilena (data/raw/comunas).
 Salida: web/public/data/lugares.json
 """
@@ -110,7 +110,7 @@ def main():
     stations = [s for s in json.loads((PROCESSED / "episodios_so2.json").read_text(encoding="utf8"))["stations"] if s["lat"] is not None]
     for s in stations:
         places.append({"id": "est-" + s["code"].replace("/", "-"), "kind": "estación", "name": "Estación " + re.sub(r"^estaci[oó]n\s+", "", s["name"].strip(), flags=re.I), "code": s["code"], "sub": f"{s['comuna']} · operada por {s['owner']}",
-                       "lat": s["lat"], "lon": s["lon"], "alt": norm(f"{s['name']} {s['comuna']} {s['owner']} sinca")})
+                       "lat": s["lat"], "lon": s["lon"], "alt": norm(f"{s['name']} {s['comuna']} {s['owner']} sinca snifa")})
     # localidades
     find, seen = comuna_finder(), set()
     els = json.loads((RAW / "comunas" / "osm_places.json").read_text(encoding="utf8"))["elements"]
@@ -131,7 +131,7 @@ def main():
         p["cov"] = covered(p["lon"], p["lat"])
     places = [p for p in places if p["cov"] or p["kind"] != "localidad"]  # las localidades de otras regiones no aportan: no hay estaciones cargadas alla
     out = ROOT / "web" / "public" / "data" / "lugares.json"
-    out.write_text(json.dumps({"sources": "Sernageomin (minas), RETC (fuentes), SINCA (estaciones), OpenStreetMap (localidades)", "places": places}, ensure_ascii=False), encoding="utf8")
+    out.write_text(json.dumps({"sources": "Sernageomin (minas), RETC (fuentes), SINCA y SNIFA (estaciones), OpenStreetMap (localidades)", "places": places}, ensure_ascii=False), encoding="utf8")
     print(f"{len(places)} lugares: {n_minas} minas, {n_fuentes} fuentes, {len(stations)} estaciones, {sum(p['kind'] == 'localidad' for p in places)} localidades | {out.stat().st_size // 1024} KB")
     print("fuera de Antofagasta y Atacama:", sum(not p["cov"] for p in places), "| ej.:", [p["name"] for p in places if not p["cov"]][:12])
     print("minas:", [p["name"] for p in places[:n_minas]])

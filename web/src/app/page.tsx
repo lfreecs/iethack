@@ -10,6 +10,7 @@ import SearchBox from "@/components/SearchBox";
 import TopNav from "@/components/TopNav";
 import { LEVELS, TIMELINE, fmtDay, fmtMonth, levelOf, levelOfPeak, loadAttribution, loadPlaces, placeName, verdictOf, type Attribution, type Episode, type LevelKey, type Place } from "@/lib/episodes";
 import { num } from "@/lib/format";
+import { NARROW, useMedia } from "@/lib/useMedia";
 
 const EpisodeMap = dynamic(() => import("@/components/EpisodeMap"), { ssr: false });
 const LEGEND: LevelKey[] = ["emergencia", "preemergencia", "alerta", "norma", "propuesta", "alza", "plana"];
@@ -27,7 +28,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [minLevel, setMinLevel] = useState<LevelKey>("norma");
   const [range, setRange] = useState<[number, number]>([0, LAST]);
-  const [collapsed, setCollapsed] = useState(false);
+  const narrow = useMedia(NARROW);
+  const [collapsedBy, setCollapsedBy] = useState<boolean | null>(null); // null: el usuario aun no lo toca
+  const collapsed = collapsedBy ?? narrow; // en telefono parte minimizado para que se vea el mapa
   const [limit, setLimit] = useState(PAGE);
 
   /** Abre un episodio y, si los filtros lo dejaban fuera, los amplia lo justo para que se vea. */
@@ -96,31 +99,39 @@ export default function Home() {
           <div className="flex h-full items-center justify-center text-muted">Cargando episodios…</div>
         ) : (
           <>
-            <EpisodeMap data={data} events={visible} selected={selected} place={place} places={places} leftInset={collapsed ? 16 : 372} onSelect={setSelectedId} onPlace={pickPlace} />
+            <EpisodeMap data={data} events={visible} selected={selected} place={place} places={places} leftInset={collapsed ? 16 : 372} narrow={narrow} onSelect={setSelectedId} onPlace={pickPlace} />
 
-            <aside className={`absolute left-4 top-4 z-10 flex w-[340px] flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-xl ${collapsed ? "" : "bottom-4"}`}>
+            {/* en pantallas angostas el panel es una hoja que sube desde abajo y se oculta mientras hay una ficha abierta */}
+            <aside
+              className={`absolute inset-x-3 bottom-3 z-10 flex max-h-[72dvh] flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-xl lg:inset-x-auto lg:left-4 lg:top-4 lg:max-h-none lg:w-[340px] ${
+                collapsed ? "lg:bottom-auto" : "lg:bottom-4"
+              } ${sheetOpen ? "max-lg:hidden" : ""}`}
+            >
               <div className={`flex items-start justify-between gap-2 px-4 pt-4 ${collapsed ? "pb-4" : ""}`}>
                 <div className="min-w-0">
                   <h1 className="text-[15px] font-semibold tracking-tight text-ink">Episodios de SO₂</h1>
                   <p className="mt-0.5 text-[11.5px] leading-snug text-muted">
                     {collapsed
-                      ? `${stats.total} a la vista · ${stats.found} con fuente probable`
+                      ? narrow
+                        ? `${stats.total} a la vista, desde ${LEVELS[minLevel].min} µg/m³. Toca un círculo del mapa o abre esta lista.`
+                        : `${stats.total} a la vista · ${stats.found} con fuente probable`
                       : `Desde ${LEVELS[minLevel].min} µg/m³ (${LEVELS[minLevel].what}), de ${fmtMonth(TIMELINE[range[0]])} a ${fmtMonth(TIMELINE[range[1]])}. Elige uno para ver de dónde venía el aire.`}
                   </p>
                 </div>
                 <button
-                  onClick={() => setCollapsed((c) => !c)}
+                  onClick={() => setCollapsedBy(!collapsed)}
                   aria-expanded={!collapsed}
                   aria-label={collapsed ? "Expandir el panel de episodios" : "Minimizar el panel de episodios"}
                   title={collapsed ? "Expandir" : "Minimizar"}
-                  className="shrink-0 rounded-lg border border-line p-1.5 text-ink-soft hover:bg-raised"
+                  className="shrink-0 rounded-lg border border-line p-2 text-ink-soft hover:bg-raised lg:p-1.5"
                 >
-                  {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                  {collapsed === narrow ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
 
               {!collapsed && (
-                <>
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-visible">
+                  {narrow && <FilterDock embedded minLevel={minLevel} onMinLevel={setMinLevel} range={range} onRange={setRange} counts={counts} shown={visible.length} />}
                   <div className="mt-3 grid grid-cols-3 gap-1.5 px-4 text-center">
                     {[
                       { n: stats.total, label: "episodios" },
@@ -134,7 +145,7 @@ export default function Home() {
                     ))}
                   </div>
 
-                  <ul className="mt-3 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
+                  <ul className="mt-3 space-y-1 px-2 pb-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
                     {visible.length === 0 && <li className="px-3 py-6 text-center text-[12.5px] text-muted">Ningún episodio con ese nivel en ese período.</li>}
                     {visible.slice(0, limit).map((e) => {
                       const lv = LEVELS[levelOf(e)];
@@ -142,7 +153,10 @@ export default function Home() {
                       return (
                         <li key={e.id}>
                           <button
-                            onClick={() => setSelectedId(active ? null : e.id)}
+                            onClick={() => {
+                              setSelectedId(active ? null : e.id);
+                              if (narrow) setCollapsedBy(true);
+                            }}
                             className={`flex w-full items-stretch gap-3 rounded-xl px-2.5 py-2 text-left transition-colors ${active ? "bg-ice ring-1 ring-inset ring-cyan" : "hover:bg-raised"}`}
                           >
                             <span className="w-1 shrink-0 rounded-full" style={{ background: lv.color }} />
@@ -196,20 +210,22 @@ export default function Home() {
                       Cada círculo muestra cuántos episodios a la vista se midieron ahí, con el color del más grave. El de doble anillo reúne estaciones cercanas: haz clic para acercar.
                     </p>
                     <p className="mt-2 text-[10px] leading-snug text-faint">
-                      Valores en µg/m³ por hora. Fuentes: SINCA y RETC (Ministerio del Medio Ambiente), Sernageomin, Open-Meteo, OpenStreetMap, Natural Earth.
+                      Valores en µg/m³ por hora. Fuentes: SINCA y RETC (Ministerio del Medio Ambiente), SNIFA (SMA), Sernageomin, Open-Meteo, OpenStreetMap, Natural Earth.
                     </p>
                   </div>
-                </>
+                </div>
               )}
             </aside>
 
-            <div className="absolute left-[372px] top-4 z-20 w-[340px] max-w-[calc(100vw-388px)]">
+            <div className="absolute inset-x-3 top-3 z-20 lg:left-[372px] lg:right-auto lg:top-4 lg:w-[340px]">
               <SearchBox places={places} query={query} onQuery={setQuery} onPick={pickPlace} onClear={clearPlace} />
             </div>
 
-            <div className="absolute bottom-4 z-10 transition-[left,right] duration-300" style={{ left: collapsed ? 16 : 372, right: sheetOpen ? 472 : 16 }}>
-              <FilterDock minLevel={minLevel} onMinLevel={setMinLevel} range={range} onRange={setRange} counts={counts} shown={visible.length} />
-            </div>
+            {!narrow && (
+              <div className="absolute bottom-4 z-10 transition-[left,right] duration-300" style={{ left: collapsed ? 16 : 372, right: sheetOpen ? 472 : 16 }}>
+                <FilterDock minLevel={minLevel} onMinLevel={setMinLevel} range={range} onRange={setRange} counts={counts} shown={visible.length} />
+              </div>
+            )}
 
             {selected ? (
               <EpisodeSheet

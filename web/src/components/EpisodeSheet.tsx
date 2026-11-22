@@ -41,7 +41,7 @@ export default function EpisodeSheet({ episode: e, onClose, onStation }: { episo
   }, [onClose]);
 
   return (
-    <aside className="absolute bottom-4 right-4 top-4 z-10 flex w-[440px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-xl">
+    <aside className="absolute inset-x-0 bottom-0 z-10 flex h-[58dvh] flex-col overflow-hidden rounded-t-2xl border border-line bg-panel shadow-xl lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-4 lg:h-auto lg:w-[440px] lg:rounded-2xl">
       <div className="h-1.5 shrink-0" style={{ background: lv.color }} />
       <div className="flex items-start justify-between gap-3 px-5 pt-4">
         <div className="min-w-0">
@@ -197,7 +197,8 @@ export default function EpisodeSheet({ episode: e, onClose, onStation }: { episo
         )}
 
         <p className="border-t border-line pt-3 text-[11px] leading-snug text-faint">
-          Estación operada por {e.station_owner}. Dato {e.status} por la autoridad (SINCA). Este resultado ordena fuentes probables para orientar una fiscalización;
+          Estación operada por {e.station_owner}.{" "}
+          {e.status.startsWith("informado") ? "Dato informado por la propia empresa a la SMA (seguimiento ambiental, SNIFA); la autoridad no lo valida." : `Dato ${e.status} por la autoridad (SINCA).`} Este resultado ordena fuentes probables para orientar una fiscalización;
           no determina responsabilidades.
         </p>
       </div>

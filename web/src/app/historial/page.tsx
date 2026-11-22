@@ -137,10 +137,10 @@ export default function Historial() {
     <div className="flex h-full flex-col">
       <TopNav active="historial" />
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-6 py-7">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-7">
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Registro histórico</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted">
-            Episodios de SO₂ medidos por estaciones oficiales entre 2018 y 2026, con la fuente más probable según el viento y el inventario oficial de emisiones.
+            Episodios de SO₂ medidos en estaciones de monitoreo entre 2018 y 2026, con la fuente más probable según el viento y el inventario oficial de emisiones.
             Al abrir se muestran los que superaron la norma horaria (350 µg/m³); baja el nivel mínimo para ver alzas menores.
           </p>
 
@@ -190,7 +190,7 @@ export default function Historial() {
             <span className="text-[13px] font-semibold text-ink">
               Nivel mínimo <span className="font-normal text-muted">· µg/m³ en 1 hora</span>
             </span>
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {LEVEL_STEPS.map((k) => (
                 <button
                   key={k}
@@ -210,12 +210,12 @@ export default function Historial() {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex gap-1 rounded-xl bg-ice p-1 text-[13px]">
+            <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-ice p-1 text-[13px]">
               {FILTERS.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
-                  className={`rounded-lg px-3 py-1.5 font-medium transition-colors ${filter === f.id ? "bg-panel text-ink shadow-sm" : "text-muted hover:text-ink"}`}
+                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 font-medium transition-colors ${filter === f.id ? "bg-panel text-ink shadow-sm" : "text-muted hover:text-ink"}`}
                 >
                   {f.label}
                 </button>
@@ -223,7 +223,7 @@ export default function Historial() {
             </div>
             <div className="flex items-center gap-2 text-[13px] text-muted">
               Ordenar por
-              <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="rounded-lg border border-line bg-panel px-2.5 py-1.5 text-ink">
+              <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="rounded-lg border border-line bg-panel px-2.5 py-1.5 text-ink max-lg:text-[16px]">
                 <option value="graves">Más graves primero</option>
                 <option value="recientes">Más recientes primero</option>
               </select>
@@ -253,7 +253,7 @@ export default function Historial() {
           )}
 
           <p className="mt-8 text-[11.5px] leading-snug text-faint">
-            Mediciones: SINCA, Ministerio del Medio Ambiente. La mayoría de las estaciones con episodios pertenece a las propias empresas y sus datos figuran como no
+            Mediciones: SINCA, Ministerio del Medio Ambiente; la estación La Negra viene de las planillas que Altonorte entrega a la SMA (SNIFA), desde marzo de 2022. La mayoría de las estaciones con episodios pertenece a las propias empresas y sus datos figuran como no
             validados. Los resultados ordenan fuentes probables para orientar una fiscalización; no determinan responsabilidades.
           </p>
         </div>

@@ -21,6 +21,10 @@ from common import PROCESSED, RAW
 LEVELS = (("alza", 150), ("propuesta", 262), ("norma", 350), ("alerta", 500), ("preemergencia", 650), ("emergencia", 950))
 MIN_LEVEL, NORM = 150, 350
 REGIONS = {"II": "Antofagasta", "III": "Atacama"}
+# Estaciones que SINCA no publica: la serie la arma snifa_altonorte.py con las planillas que la empresa entrega a la SMA.
+# Coordenadas de la planilla (UTM 19S 365787 E, 7367902 N). Cubre desde marzo de 2022; antes viene en archivos comprimidos.
+EXTRA = [{"code": "SNIFA/LNE", "name": "La Negra", "region": "Antofagasta", "status": "informado por la empresa",
+          "info": {"lat": -23.7945, "lon": -70.3174, "owner": "Complejo Metalúrgico Altonorte", "comuna": "Antofagasta", "wind": True}}]
 
 
 def stations(region):
@@ -52,11 +56,15 @@ def ficha(code):
 
 def main():
     out = []
-    for region, rname in REGIONS.items():
-        for code, name in stations(region).items():
+    todo = [(code, name, rname, None) for region, rname in REGIONS.items() for code, name in stations(region).items()]
+    todo += [(x["code"], x["name"], x["region"], x) for x in EXTRA]
+    if True:
+        for code, name, rname, extra in todo:
             try:
                 d = sinca.series(code, "SO2")
-                info = ficha(code)
+                info = extra["info"] if extra else ficha(code)
+                if extra:
+                    d = {k: (v, extra["status"]) for k, (v, _) in d.items()}
             except Exception as e:
                 print(f"{code} {name}: ERROR {e!r}"[:140], flush=True)
                 continue
@@ -87,7 +95,7 @@ def main():
             out.append(rec)
             print(f"{code:9s} {name[:28]:28s} {info['comuna'][:14]:14s} horas {len(keys):6d} máx {rec['max']:7.1f} p99 {rec['p99']:6.1f} | {counts} | eventos {len(events)} | viento medido: {info['wind']}", flush=True)
     PROCESSED.mkdir(parents=True, exist_ok=True)
-    (PROCESSED / "episodios_so2.json").write_text(json.dumps({"levels": dict(LEVELS), "source": "SINCA, Ministerio del Medio Ambiente", "stations": out}, ensure_ascii=False, indent=1), encoding="utf8")
+    (PROCESSED / "episodios_so2.json").write_text(json.dumps({"levels": dict(LEVELS), "source": "SINCA, Ministerio del Medio Ambiente; La Negra: seguimiento ambiental en SNIFA (SMA)", "stations": out}, ensure_ascii=False, indent=1), encoding="utf8")
     peaks = [e["peak"] for s in out for e in s["events"]]
     print(f"episodios (150 o mas): {len(peaks)} en {sum(1 for s in out if s['events'])} estaciones |", {lab: sum(p >= lim for p in peaks) for lab, lim in LEVELS})
 

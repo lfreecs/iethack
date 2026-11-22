@@ -58,7 +58,7 @@ export default function SearchBox({ places, query, onQuery, onPick, onClear }: P
             } else if (e.key === "Enter" && results[hi]) pick(results[hi]);
             else if (e.key === "Escape") inputRef.current?.blur();
           }}
-          className="min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-faint"
+          className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-faint lg:text-[13.5px]"
         />
         {query && (
           <button onMouseDown={(e) => e.preventDefault()} onClick={onClear} aria-label="Borrar la búsqueda" className="rounded-md p-1 text-muted hover:bg-raised hover:text-ink">

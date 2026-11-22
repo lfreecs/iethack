@@ -1,6 +1,7 @@
 // Captura de pantalla con el Chrome instalado (sin dependencias), para revisar la interfaz sin abrir el navegador.
-// Uso: node scripts/shot.mjs <url> <salida.png> [--wait=6000] [--size=1440x900] [--steps="js;;sleep:800;;js"]
-// Cada paso es una expresion JS que se evalua en la pagina, o "sleep:ms". Imprime errores y avisos de la consola.
+// Uso: node scripts/shot.mjs <url> <salida.png> [--wait=6000] [--size=1440x900] [--mobile=1] [--steps="js;;sleep:800;;click:300,400;;js"]
+// Cada paso es una expresion JS que se evalua en la pagina, "sleep:ms", "click:x,y" (clic real del mouse) o "tap:x,y" (toque).
+// --mobile=1 emula un telefono (pantalla tactil). Imprime errores y avisos de la consola.
 import { spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -58,12 +59,20 @@ try {
     });
   await send("Page.enable");
   await send("Runtime.enable");
-  await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+  await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: opt.mobile ? 2 : 1, mobile: !!opt.mobile });
+  if (opt.mobile) await send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 2 });
   await send("Page.navigate", { url });
   await sleep(Number(opt.wait || 6000));
   for (const step of opt.steps ? opt.steps.split(";;") : []) {
     if (step.startsWith("sleep:")) await sleep(Number(step.slice(6)));
-    else {
+    else if (step.startsWith("click:")) {
+      const [x, y] = step.slice(6).split(",").map(Number);
+      for (const type of ["mouseMoved", "mousePressed", "mouseReleased"]) await send("Input.dispatchMouseEvent", { type, x, y, button: type === "mouseMoved" ? "none" : "left", clickCount: 1 });
+    } else if (step.startsWith("tap:")) {
+      const [x, y] = step.slice(4).split(",").map(Number);
+      await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+      await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    } else {
       const r = await send("Runtime.evaluate", { expression: step, awaitPromise: true });
       if (r.exceptionDetails) logs.push(`[paso] ${step.slice(0, 60)} -> ${r.exceptionDetails.exception?.description ?? r.exceptionDetails.text}`);
     }

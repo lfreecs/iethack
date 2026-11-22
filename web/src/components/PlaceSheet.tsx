@@ -79,7 +79,7 @@ export default function PlaceSheet({ place, data, places, onClose, onEpisode, on
   const lastYear = Object.keys(place.so2 ?? {}).sort().at(-1);
 
   return (
-    <aside className="absolute bottom-4 right-4 top-4 z-10 flex w-[440px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-xl">
+    <aside className="absolute inset-x-0 bottom-0 z-10 flex h-[58dvh] flex-col overflow-hidden rounded-t-2xl border border-line bg-panel shadow-xl lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-4 lg:h-auto lg:w-[440px] lg:rounded-2xl">
       <div className="h-1.5 shrink-0 bg-navy" />
       <div className="flex items-start justify-between gap-3 px-5 pt-4">
         <div className="min-w-0">
@@ -111,7 +111,7 @@ export default function PlaceSheet({ place, data, places, onClose, onEpisode, on
           rec.nearest && (
             <div className="rounded-xl bg-ice px-4 py-3 text-xs leading-snug text-ink-soft">
               <b className="text-ink">Sin estaciones de SO₂ cerca.</b> La más cercana es {rec.nearest.s.name.trim()} ({rec.nearest.s.comuna}), a {num(rec.nearest.km, 0)} km. Un
-              episodio aquí no quedaría registrado por las estaciones de SO₂ que publica SINCA.
+              episodio aquí no quedaría registrado por las estaciones de SO₂ cargadas.
             </div>
           )
         )}
@@ -251,7 +251,7 @@ export default function PlaceSheet({ place, data, places, onClose, onEpisode, on
         )}
 
         <p className="border-t border-line pt-3 text-[11px] leading-snug text-faint">
-          “Cerca” es a menos de {NEAR_KM} km (el círculo punteado del mapa). Fuentes: SINCA y RETC (Ministerio del Medio Ambiente), Sernageomin y OpenStreetMap.
+          “Cerca” es a menos de {NEAR_KM} km (el círculo punteado del mapa). Fuentes: SINCA y RETC (Ministerio del Medio Ambiente), SNIFA (SMA), Sernageomin y OpenStreetMap.
         </p>
       </div>
     </aside>

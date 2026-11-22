@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GeoJSONSource, LayerSpecification, Map as MLMap, MapLayerMouseEvent, Marker, Popup, SourceSpecification } from "maplibre-gl";
+import type { GeoJSONSource, LayerSpecification, Map as MLMap, MapMouseEvent, Marker, Popup, SourceSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LEVELS, NEAR_KM, destination, distanceKm, levelOf, type Attribution, type Episode, type LevelKey, type Place } from "@/lib/episodes";
 
@@ -14,6 +14,8 @@ type Props = {
   places: Place[];
   /** Ancho en px que ocupa el panel izquierdo: el mapa centra lo que muestra en el espacio que queda libre. */
   leftInset: number;
+  /** Pantalla angosta: los paneles no van a los lados, sino abajo. */
+  narrow: boolean;
   onSelect: (id: string) => void;
   onPlace: (p: Place) => void;
 };
@@ -28,6 +30,13 @@ const HALF_CONE = { medido: 12, vecina: 18, modelo: 28 } as const;
 const SHEET_W = 472;
 const TOP_H = 76;
 const DOCK_H = 200;
+/** En pantallas angostas: parte del alto que tapa la ficha (h-[58dvh] en EpisodeSheet y PlaceSheet). */
+const SHEET_FRAC = 0.58;
+/** Espacio que tapan los paneles: a los lados en pantallas anchas; arriba el buscador y abajo el panel o la ficha en las angostas. */
+const padFor = (narrow: boolean, leftInset: number, sheet: boolean): Pad =>
+  narrow
+    ? { top: 64, bottom: sheet ? Math.round(window.innerHeight * SHEET_FRAC) : 92, left: 12, right: 12 }
+    : { top: TOP_H, bottom: DOCK_H, left: leftInset, right: sheet ? SHEET_W : 16 };
 /** Nombres cortos de las fuentes mas grandes, para las etiquetas del mapa. */
 const SHORT: Record<string, string> = {
   "DIVISIÓN CHUQUICAMATA": "Fundición Chuquicamata",
@@ -136,7 +145,7 @@ function cluster(groups: Group[], project: (g: Group) => { x: number; y: number 
   }
 }
 
-export default function EpisodeMap({ data, events, selected, place, places, leftInset, onSelect, onPlace }: Props) {
+export default function EpisodeMap({ data, events, selected, place, places, leftInset, narrow, onSelect, onPlace }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const libRef = useRef<typeof import("maplibre-gl") | null>(null);
@@ -146,12 +155,12 @@ export default function EpisodeMap({ data, events, selected, place, places, left
   const popup = useRef<Popup | null>(null);
   const shareMarkers = useRef<Marker[]>([]);
   const pin = useRef<Marker | null>(null);
-  const live = useRef({ onSelect, onPlace, places, leftInset });
+  const live = useRef({ onSelect, onPlace, places, leftInset, narrow });
   const [loaded, setLoaded] = useState(0); // aumenta cada vez que el estilo de un mapa queda listo
 
   useEffect(() => {
-    live.current = { onSelect, onPlace, places, leftInset };
-  }, [onSelect, onPlace, places, leftInset]);
+    live.current = { onSelect, onPlace, places, leftInset, narrow };
+  }, [onSelect, onPlace, places, leftInset, narrow]);
 
   // Circulos y etiquetas: se recalculan cuando cambian los episodios a la vista, el elegido o el zoom
   const layout = useCallback(() => {
@@ -235,11 +244,13 @@ export default function EpisodeMap({ data, events, selected, place, places, left
       const p = map.project([c.lon, c.lat]);
       return [p.x - 28, p.y + 10, p.x + 28, p.y + 38]; // porcentaje que se dibuja bajo cada fuente
     });
-    const free = (r: number[]) =>
+    // el punto de cada fuente con nombre tambien estorba a las etiquetas de las demas
+    const dots = labels.current.filter((l) => l.kind === "src").map((l) => ({ ...map.project(l.at), r: 11, of: l }));
+    const free = (r: number[], own: Label) =>
       r[0] >= x0 &&
       r[2] <= x1 &&
       !taken.some((q) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1]) &&
-      !discs.some((c) => Math.hypot(c.x - Math.max(r[0], Math.min(c.x, r[2])), c.y - Math.max(r[1], Math.min(c.y, r[3]))) < c.r);
+      ![...discs, ...dots.filter((c) => c.of !== own)].some((c) => Math.hypot(c.x - Math.max(r[0], Math.min(c.x, r[2])), c.y - Math.max(r[1], Math.min(c.y, r[3]))) < c.r);
     for (const l of labels.current) {
       const p = map.project(l.at);
       const [w, h] = [l.el.offsetWidth, l.el.offsetHeight];
@@ -251,7 +262,7 @@ export default function EpisodeMap({ data, events, selected, place, places, left
               return [[0, -up], [side, -up], [-side, -up], [g + w / 2, 0], [-g - w / 2, 0], [0, up], [side, up], [-side, up]];
             });
       const rect = ([dx, dy]: [number, number]) => [p.x + dx - w / 2 - 2, p.y + dy - h / 2 - 1, p.x + dx + w / 2 + 2, p.y + dy + h / 2 + 1];
-      const i = spots.findIndex((sp) => free(rect(sp)));
+      const i = spots.findIndex((sp) => free(rect(sp), l));
       l.el.style.visibility = i < 0 ? "hidden" : "";
       if (i < 0) continue;
       taken.push(rect(spots[i]));
@@ -314,15 +325,16 @@ export default function EpisodeMap({ data, events, selected, place, places, left
       );
 
       // vista inicial: todas las estaciones dentro del espacio que dejan libre los paneles
-      const pad: Pad = { top: TOP_H, bottom: DOCK_H, left: live.current.leftInset, right: 16 };
+      const pad = padFor(live.current.narrow, live.current.leftInset, false);
       const start = frame(data.stations.map((s): [number, number] => [s.lon, s.lat]), ref.current.clientWidth, ref.current.clientHeight, pad, 6.2);
       const created = new maplibre.Map({
-        container: ref.current, ...start, maxZoom: MAX_ZOOM, attributionControl: false, dragRotate: false, pitchWithRotate: false,
+        container: ref.current, ...start, maxZoom: MAX_ZOOM, attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
         style: { version: 8, sources, layers },
       });
       map = created;
       mapRef.current = created;
       created.setPadding(pad);
+      created.touchZoomRotate.disableRotation(); // con dos dedos solo se acerca o aleja: el mapa no gira
       created.addControl(new maplibre.NavigationControl({ showCompass: false }), "top-left");
 
       // etiquetas: primero las fuentes mas grandes, que eligen sitio antes; layout() las acomoda o las oculta
@@ -345,16 +357,20 @@ export default function EpisodeMap({ data, events, selected, place, places, left
       created.on("zoom", layout);
 
       // clic en una fuente o en una estacion: abre la ficha de ese lugar
-      created.on("click", "fuentes", (ev: MapLayerMouseEvent) => {
-        const name = ev.features?.[0]?.properties?.name;
-        const found = live.current.places
-          .filter((p) => p.kind === "fuente" && p.name === name)
-          .sort((a, b) => distanceKm(ev.lngLat.lat, ev.lngLat.lng, a.lat, a.lon) - distanceKm(ev.lngLat.lat, ev.lngLat.lng, b.lat, b.lon))[0];
-        if (found) live.current.onPlace(found);
-      });
-      created.on("click", "estaciones", (ev: MapLayerMouseEvent) => {
-        const code = ev.features?.[0]?.properties?.code;
-        const found = live.current.places.find((p) => p.kind === "estación" && p.code === code);
+      // se busca el punto mas cercano en 12 px a la redonda, porque con el dedo es dificil acertar a un punto chico
+      created.on("click", (ev: MapMouseEvent) => {
+        const { x, y } = ev.point;
+        const far = (f: GeoJSON.Feature) => {
+          const p = created.project((f.geometry as GeoJSON.Point).coordinates as [number, number]);
+          return Math.hypot(p.x - x, p.y - y);
+        };
+        const hit = created.queryRenderedFeatures([[x - 12, y - 12], [x + 12, y + 12]], { layers: ["fuentes", "estaciones"] }).sort((a, b) => far(a) - far(b))[0];
+        if (!hit) return;
+        const [lon, lat] = (hit.geometry as GeoJSON.Point).coordinates;
+        const found =
+          hit.layer.id === "estaciones"
+            ? live.current.places.find((p) => p.kind === "estación" && p.code === hit.properties.code)
+            : live.current.places.filter((p) => p.kind === "fuente" && p.name === hit.properties.name).sort((a, b) => distanceKm(lat, lon, a.lat, a.lon) - distanceKm(lat, lon, b.lat, b.lon))[0];
         if (found) live.current.onPlace(found);
       });
       for (const layer of ["fuentes", "estaciones"]) {
@@ -434,7 +450,7 @@ export default function EpisodeMap({ data, events, selected, place, places, left
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded) return;
-    const pad: Pad = { top: TOP_H, bottom: DOCK_H, left: leftInset, right: selected || place ? SHEET_W : 16 };
+    const pad = padFor(narrow, leftInset, !!(selected || place));
     const box = map.getContainer();
     if (selected) {
       const e = selected;
@@ -444,7 +460,7 @@ export default function EpisodeMap({ data, events, selected, place, places, left
       const pts = [0, 90, 180, 270].map((b) => destination(place.lat, place.lon, b, NEAR_KM));
       map.flyTo({ ...frame(pts, box.clientWidth, box.clientHeight, pad, 10.5), padding: pad, duration: 2400, curve: 1.6, essential: true });
     } else map.easeTo({ padding: pad, duration: 400 });
-  }, [selected, place, leftInset, loaded]);
+  }, [selected, place, leftInset, narrow, loaded]);
 
   return (
     // MapLibre fuerza position: relative en su contenedor, por eso el tamaño lo da un div exterior

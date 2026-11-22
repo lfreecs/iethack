@@ -1,7 +1,7 @@
 import TopNav from "@/components/TopNav";
 
 const STEPS = [
-  { t: "Detectar", d: "Se revisan las mediciones horarias de SO₂ de las estaciones oficiales (SINCA). Un episodio son horas seguidas con 150 µg/m³ o más, y se clasifica por su máximo: 350 es la norma horaria del D.S. 104/2018 y 500, 650 y 950 son sus niveles de alerta, preemergencia y emergencia. 262 es la norma propuesta en 2025 y 150, un umbral nuestro para ver alzas menores." },
+  { t: "Detectar", d: "Se revisan las mediciones horarias de SO₂ de las estaciones de monitoreo (SINCA y, para La Negra, SNIFA). Un episodio son horas seguidas con 150 µg/m³ o más, y se clasifica por su máximo: 350 es la norma horaria del D.S. 104/2018 y 500, 650 y 950 son sus niveles de alerta, preemergencia y emergencia. 262 es la norma propuesta en 2025 y 150, un umbral nuestro para ver alzas menores." },
   { t: "Revisar el instrumento", d: "Si la estación repite casi el mismo valor durante horas, la lectura es plana: el valor real no se conoce y no se señala a nadie." },
   { t: "Reconstruir el viento", d: "Desde la estación se retrocede hora a hora con el viento, hasta 12 horas. Se usa el viento medido en la misma estación; si no existe, el medido en la estación más cercana a menos de 15 km; y si tampoco, el de un modelo (ERA5), que es menos preciso." },
   { t: "Calcular cuánto aportaría cada fuente", d: "Para cada fuente del inventario oficial (RETC) se estima la concentración que llegaría a la estación con una pluma gaussiana: depende de lo que declara emitir, de qué tan alineada está con el viento, de la distancia y del tiempo de viaje." },
@@ -13,8 +13,9 @@ const LIMITS = [
   "No determina responsabilidades. Ordena fuentes probables para orientar una fiscalización.",
   "Las emisiones del inventario son declaradas o estimadas por las empresas, y algunos años están incompletos.",
   "La mayoría de las estaciones con episodios pertenece a las propias empresas, y sus datos figuran como no validados.",
+  "La estación La Negra no está en SINCA: sus datos los informa la propia fundición Altonorte a la SMA, en ppb, y se pasan a µg/m³ multiplicando por 2,62. Solo se cargó desde marzo de 2022.",
   "Dos fuentes en la misma dirección no se pueden separar. Pasa con Chuquicamata y Ministro Hales vistas desde Calama.",
-  "Solo 11 de las 27 estaciones miden viento. En otras 10 se usa el viento de una estación vecina y en las 6 restantes, un modelo; por eso su confianza es menor.",
+  "Solo 12 de las 28 estaciones miden viento. En otras 10 se usa el viento de una estación vecina y en las 6 restantes, un modelo; por eso su confianza es menor.",
   "En la mayoría de las alzas bajo la norma, el viento de esa hora no venía desde ninguna fuente inventariada. El viento en superficie no siempre sigue a una pluma emitida en altura.",
   "El cálculo supone terreno plano y no considera la altura de las chimeneas.",
   "El satélite no detecta episodios de un día: su ruido es mucho mayor que la señal de una fundición. Solo sirve en promedios anuales.",
@@ -23,6 +24,7 @@ const LIMITS = [
 
 const SOURCES = [
   ["SINCA, Ministerio del Medio Ambiente", "SO₂ y viento por hora de 27 estaciones de Antofagasta y Atacama, 2018–2026"],
+  ["SNIFA, Superintendencia del Medio Ambiente", "SO₂ y viento por hora de la estación La Negra, de las planillas mensuales que la fundición Altonorte entrega como seguimiento ambiental, marzo de 2022 a septiembre de 2026"],
   ["RETC, Ministerio del Medio Ambiente", "Emisiones anuales de SO₂ declaradas por establecimiento, 2019–2025"],
   ["Open-Meteo (reanálisis ERA5)", "Viento, radiación y nubes por hora donde no hay viento medido"],
   ["Sentinel-5P, Copernicus", "SO₂ diario desde el espacio, usado solo como contexto anual"],
@@ -36,7 +38,7 @@ export default function Metodo() {
     <div className="flex h-full flex-col">
       <TopNav active="metodo" />
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-6 py-7">
+        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-7">
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Método y límites</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted">
             Cómo se pasa de una medición alta de SO₂ en una estación a la fuente más probable, y qué no se puede afirmar con este método.
@@ -56,8 +58,8 @@ export default function Metodo() {
           </ol>
 
           <h2 className="mt-8 text-[15px] font-semibold text-ink">La fórmula</h2>
-          <div className="mt-3 rounded-2xl border border-line bg-panel p-5 shadow-sm">
-            <p className="font-mono text-[13px] leading-relaxed text-ink">C = Q / (√(2π) · u · σ · H) · exp(−y² / 2σ²) · exp(−t / τ)</p>
+          <div className="mt-3 overflow-x-auto rounded-2xl border border-line bg-panel p-5 shadow-sm">
+            <p className="whitespace-nowrap font-mono text-[13px] leading-relaxed text-ink">C = Q / (√(2π) · u · σ · H) · exp(−y² / 2σ²) · exp(−t / τ)</p>
             <p className="mt-2 font-mono text-[13px] text-ink">P = C / (ΣC + fondo)</p>
             <dl className="mt-4 grid gap-x-6 gap-y-1.5 text-[12.5px] text-ink-soft sm:grid-cols-2">
               {[

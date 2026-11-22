@@ -12,23 +12,25 @@ type Props = {
   counts: number[];
   /** Episodios que quedan a la vista con el nivel y el periodo elegidos. */
   shown: number;
+  /** En pantallas angostas va dentro del panel de episodios, sin tarjeta propia. */
+  embedded?: boolean;
 };
 
 const LAST = TIMELINE.length - 1;
 const YEARS = TIMELINE.flatMap((m, i) => (m.endsWith("-01") ? [{ i, y: m.slice(0, 4) }] : []));
 
 /** Barra de filtros del mapa: nivel minimo de SO2 y linea de tiempo con el periodo a mostrar. */
-export default function FilterDock({ minLevel, onMinLevel, range, onRange, counts, shown }: Props) {
+export default function FilterDock({ minLevel, onMinLevel, range, onRange, counts, shown, embedded }: Props) {
   const [lo, hi] = range;
   const max = Math.max(1, ...counts);
   const full = lo === 0 && hi === LAST;
   return (
-    <div className="@container rounded-2xl border border-line bg-panel px-4 pb-2.5 pt-3 shadow-xl">
+    <div className={`@container px-4 pb-2.5 pt-3 ${embedded ? "border-b border-line" : "rounded-2xl border border-line bg-panel shadow-xl"}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="text-[12px] font-semibold text-ink">
           Nivel mínimo <span className="font-normal text-muted">· µg/m³ por hora</span>
         </span>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {LEVEL_STEPS.map((k) => {
             const lv = LEVELS[k];
             const active = k === minLevel;
@@ -81,7 +83,7 @@ export default function FilterDock({ minLevel, onMinLevel, range, onRange, count
         ))}
       </div>
 
-      <div className="mt-1 flex items-center justify-between gap-3 text-[12px]">
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 text-[12px]">
         <span className="text-muted">
           Período:{" "}
           <b className="text-ink">

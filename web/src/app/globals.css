@@ -298,3 +298,30 @@ input[type="range"] {
   cursor: grab;
 }
 
+
+/* pantallas angostas: se acerca con dos dedos, asi que sobran los botones de zoom */
+@media (max-width: 1023px) {
+  .maplibregl-map .maplibregl-ctrl-top-left {
+    display: none;
+  }
+}
+/* pantallas tactiles: tiradores de la linea de tiempo mas grandes */
+@media (pointer: coarse) {
+  .dual-range,
+  .dual-range input[type="range"] {
+    height: 28px;
+  }
+  .dual-range input[type="range"]::-webkit-slider-runnable-track {
+    height: 28px;
+  }
+  .dual-range input[type="range"]::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+    margin-top: 3px;
+  }
+  .dual-range input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+}
+

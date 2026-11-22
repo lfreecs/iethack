@@ -188,7 +188,8 @@ def attribute(st, ev, sources, obs, wd, ws, background, lender=None):
         (kind == "vecina", 10, f"viento medido en otra estación ({lender[0]}, a {lender[1]} km)" if lender else ""),
         (hours[0]["u"] < 1.0, 20, "viento en calma: la dirección no es confiable"),
         (circ_sd([h["dir"] for h in hours[:4]]) > 40, 15, "viento cambiante en las horas previas"),
-        (ev["status"] != "validado", 10 if ev["status"] == "no validado" else 5, f"dato {ev['status']} por la autoridad"),
+        (ev["status"] != "validado", 5 if ev["status"] == "preliminar" else 10,
+         "dato informado por la propia empresa a la SMA; la autoridad no lo valida" if ev["status"].startswith("informado") else f"dato {ev['status']} por la autoridad"),
         (top is not None and top["align"] < 0.3, 20, "la fuente principal no queda bien alineada con el viento"),
         (isolated, 20, "pico de una sola hora, sin subida ni bajada alrededor"),
     ):
