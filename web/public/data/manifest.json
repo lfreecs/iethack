@@ -1,0 +1,240 @@
+{
+ "generated": "2026-11-21",
+ "sources": [
+  {
+   "id": "s5p",
+   "group": "Satélite",
+   "name": "NO₂ troposférico, Sentinel-5P / TROPOMI (producto L2 NO2)",
+   "provider": "Copernicus / ESA, copia pública en AWS",
+   "coverage": "2018-05-01 → 2026-11-11",
+   "frequency": "diaria (una pasada, ~13:30 hora local)",
+   "status": "en uso",
+   "url": "https://meeo-s5p.s3.amazonaws.com/",
+   "used_for": "Señal de cada mina, capas mensuales del mapa y pluma alineada con el viento.",
+   "folder": {
+    "path": "data/daily/*.npz",
+    "n": 3117,
+    "mb": 230.9,
+    "first": "2018-05-01",
+    "last": "2026-11-11",
+    "missing_days": 0
+   },
+   "note": "Reprocesado (RPRO) hasta 2022-07-25 y operacional (OFFL) después; solo mediciones con calidad ≥ 75 %; recortado a Chile entre 18° y 33° S."
+  },
+  {
+   "id": "viento",
+   "group": "Viento",
+   "name": "Viento a 100 m a la hora de la pasada (16–18 UTC), reanálisis ERA5",
+   "provider": "Open-Meteo Historical Weather API",
+   "coverage": "2018-05-01 → 2026-11-11",
+   "frequency": "diaria, por mina",
+   "status": "en uso",
+   "url": "https://open-meteo.com/en/docs/historical-weather-api",
+   "used_for": "Prueba de solidez (días de calma, a favor y en contra del viento) y estimación de toneladas de NOx.",
+   "folder": {
+    "path": "data/raw/wind/*.json",
+    "n": 9,
+    "mb": 1.8,
+    "first": "antucoya",
+    "last": "spence_sierra_gorda"
+   }
+  },
+  {
+   "id": "cochilco",
+   "group": "Producción",
+   "name": "Producción de cobre de mina por empresa",
+   "provider": "Cochilco",
+   "coverage": "2014-01 → 2026-12",
+   "frequency": "mensual",
+   "status": "en uso",
+   "url": "https://www.cochilco.cl/web/download/951/cobre/12683/produccion-de-cobre-mina-por-empresa-mensual.xlsx",
+   "used_for": "Comparación de la señal con la actividad de cada mina.",
+   "files": [
+    {
+     "path": "data/raw/cochilco_mensual.xlsx",
+     "exists": true,
+     "mb": 0.1
+    }
+   ]
+  },
+  {
+   "id": "antofagasta",
+   "group": "Declarado por la empresa",
+   "name": "Sustainability Databook 2025 (hoja Environment)",
+   "provider": "Antofagasta Minerals",
+   "coverage": "2018–2025",
+   "frequency": "anual",
+   "status": "en uso",
+   "url": "https://www.antofagasta.co.uk/media/4937/antofagasta-plc-sustainability-databook-2025-compres.xlsx",
+   "used_for": "Emisiones directas, combustible total y diésel de Centinela, Antucoya, Zaldívar y Los Pelambres.",
+   "files": [
+    {
+     "path": "data/raw/anto_databook.xlsx",
+     "exists": true,
+     "mb": 17.5
+    }
+   ]
+  },
+  {
+   "id": "bhp",
+   "group": "Declarado por la empresa",
+   "name": "ESG Standards and Databook 2026 y Databook 2021",
+   "provider": "BHP",
+   "coverage": "año fiscal 2019–2026",
+   "frequency": "anual (julio a junio)",
+   "status": "en uso",
+   "url": "https://www.bhp.com/investor-centre/reports-and-presentations/annual-report",
+   "used_for": "Emisiones directas y combustible de Escondida y Pampa Norte (Spence + Cerro Colorado).",
+   "files": [
+    {
+     "path": "data/raw/260818_ESGStandardsandDatabook2026.xlsx",
+     "exists": true,
+     "mb": 2.3
+    },
+    {
+     "path": "data/raw/210914_Sustainability and ESG Navigators and Databook 2021.xlsx",
+     "exists": true,
+     "mb": 0.7
+    },
+    {
+     "path": "data/raw/250819_ESGStandardsandDatabook2025.xlsx",
+     "exists": true,
+     "mb": 2.5
+    }
+   ],
+   "note": "El Databook 2025 queda como respaldo: el de 2026 trae los mismos años."
+  },
+  {
+   "id": "sierra_gorda",
+   "group": "Declarado por la empresa",
+   "name": "Reportes de Sustentabilidad 2021, 2022, 2024 y 2025",
+   "provider": "Sierra Gorda SCM",
+   "coverage": "2019–2025; diésel mensual 2019–2021",
+   "frequency": "anual y mensual",
+   "status": "en uso",
+   "url": "https://www.sgscm.cl/wp-content/uploads/2026/09/Sierra-Gorda-SCM-Reporte-de-Sustentabilidad-2025-V05.pdf",
+   "used_for": "Emisiones directas, litros de diésel por año y por mes.",
+   "files": [
+    {
+     "path": "data/raw/sierragorda_2021.pdf",
+     "exists": true,
+     "mb": 13.1
+    },
+    {
+     "path": "data/raw/sierragorda_2022.pdf",
+     "exists": true,
+     "mb": 21.6
+    },
+    {
+     "path": "data/raw/sierragorda_2024.pdf",
+     "exists": true,
+     "mb": 11.0
+    },
+    {
+     "path": "data/raw/sierragorda_2025.pdf",
+     "exists": true,
+     "mb": 17.6
+    }
+   ],
+   "note": "Emisiones: la cifra de 2021 viene de una edición anterior y equivale a 2,7 kg de CO₂e por litro de diésel; desde 2022 equivale a unos 3,1, lo que sugiere un cambio de método. Diésel: 2019-2022 publicado en litros; 2023-2025 publicado en MWh y convertido con el factor de la empresa (10,51 kWh por litro). Diésel mensual: enero de 2020 (18,1 millones de litros) duplica el nivel normal y el total impreso en esa tabla no calza con la suma."
+  },
+  {
+   "id": "collahuasi",
+   "group": "Declarado por la empresa",
+   "name": "Reportes de Sustentabilidad 2023 (pág. 112) y 2025 (pág. 100)",
+   "provider": "Collahuasi",
+   "coverage": "2018–2025",
+   "frequency": "anual",
+   "status": "en uso",
+   "url": "https://www.collahuasi.cl/sustentabilidad/reportes-de-sustentabilidad/",
+   "used_for": "Emisiones directas.",
+   "files": [
+    {
+     "path": "data/raw/Reporte-Sustentabilidad-Collahuasi-2023.pdf",
+     "exists": true,
+     "mb": 52.0
+    },
+    {
+     "path": "data/raw/Collahuasi_Reporte-Sustentabilidad-2025.pdf",
+     "exists": true,
+     "mb": 15.1
+    }
+   ],
+   "note": "El reporte 2025 es provisorio (sin verificación externa). Se usan las cifras más recientes publicadas para cada año."
+  },
+  {
+   "id": "codelco",
+   "group": "Declarado por la empresa",
+   "name": "ESG Data Book 2025 (hoja Emisiones y energía)",
+   "provider": "Codelco",
+   "coverage": "2024–2025",
+   "frequency": "anual",
+   "status": "insuficiente",
+   "url": "https://www.codelco.com/memorias",
+   "used_for": "Emisiones directas de Chuquicamata, Radomiro Tomic y Ministro Hales.",
+   "files": [
+    {
+     "path": "data/raw/esg_data_book_2025_v2.xlsx",
+     "exists": true,
+     "mb": 1.2
+    }
+   ],
+   "note": "Solo publica el detalle por división para dos años: no alcanza para comparar tendencias."
+  },
+  {
+   "id": "teck",
+   "group": "Declarado por la empresa",
+   "name": "Sustainability Reporting Index & Databook 2025",
+   "provider": "Teck",
+   "coverage": "—",
+   "frequency": "anual",
+   "status": "sin dato por mina",
+   "url": "https://www.teck.com/media/Teck-Sustainability-ReportingIndex-Databook_2025.xlsx",
+   "used_for": "Revisado para Quebrada Blanca.",
+   "files": [
+    {
+     "path": "data/raw/teck_databook_2025.xlsx",
+     "exists": true,
+     "mb": 1.0
+    }
+   ],
+   "note": "No separa emisiones directas ni combustible por mina; Quebrada Blanca queda sin dato declarado."
+  },
+  {
+   "id": "sernageomin",
+   "group": "Ubicación",
+   "name": "Atlas de faenas e instalaciones (rajos activos)",
+   "provider": "Sernageomin",
+   "coverage": "vigente",
+   "frequency": "—",
+   "status": "en uso",
+   "url": "https://www.sernageomin.cl/",
+   "used_for": "Coordenadas de cada mina.",
+   "files": [
+    {
+     "path": "data/config/mines.json",
+     "exists": true,
+     "mb": 0.0
+    }
+   ]
+  },
+  {
+   "id": "naturalearth",
+   "group": "Mapa base",
+   "name": "Países y ciudades 1:10m (dominio público)",
+   "provider": "Natural Earth",
+   "coverage": "—",
+   "frequency": "—",
+   "status": "en uso",
+   "url": "https://www.naturalearthdata.com/",
+   "used_for": "Mapa base local, para que la app funcione sin internet.",
+   "files": [
+    {
+     "path": "web/public/data/base.geojson",
+     "exists": true,
+     "mb": 0.4
+    }
+   ]
+  }
+ ]
+}

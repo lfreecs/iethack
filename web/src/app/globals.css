@@ -1,0 +1,300 @@
+@import "tailwindcss";
+
+/* Paleta: azul marino + cian + gris hielo, en modo claro. Todos los colores de la app salen de este bloque. */
+@theme {
+  --font-sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+
+  --color-navy: #0e1b2c;
+  --color-cyan: #4fb6c9;
+  --color-ice: #e6ebee;
+
+  --color-canvas: #f2f5f7;
+  --color-panel: #ffffff;
+  --color-raised: #f2f5f7;
+  --color-line: #dde4e9;
+  --color-line-strong: #c2ccd4;
+  --color-ink: #0e1b2c;
+  --color-ink-soft: #2c3d52;
+  --color-muted: #5a6a7b;
+  --color-faint: #8a97a4;
+
+  --color-accent: #4fb6c9;
+  --color-accent-soft: #23798b;
+  --color-on-accent: #0e1b2c;
+
+  --color-obs: #23798b;
+  --color-decl: #0e1b2c;
+  --color-prod: #8a97a4;
+
+  --color-ok: #2f9e7a;
+  --color-warn: #c98a1e;
+  --color-bad: #d64545;
+  --color-info: #23798b;
+
+  --color-sea: #d9e4ea;
+  --color-land: #f7f9fa;
+  --color-relief-light: #ffffff;
+  --color-relief-dark: #6f8090;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+}
+
+input[type="range"] {
+  accent-color: var(--color-accent);
+}
+
+/* ---------- mapa ---------- */
+/* controles de zoom: bajo el buscador, a la derecha del panel de episodios */
+.maplibregl-map .maplibregl-ctrl-top-left {
+  top: 4.25rem;
+  left: 22.6rem;
+}
+.maplibregl-map .maplibregl-ctrl-group {
+  border: 1px solid var(--color-line-strong);
+  box-shadow: 0 1px 2px rgb(14 27 44 / 0.08);
+}
+.maplibregl-popup {
+  z-index: 12;
+}
+.maplibregl-popup-content {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  box-shadow: 0 8px 24px rgb(14 27 44 / 0.16);
+}
+
+.city-label,
+.src-label,
+.share-label {
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.city-label {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+}
+.city-label::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-right: 5px;
+  border-radius: 999px;
+  background: var(--color-faint);
+  vertical-align: middle;
+}
+.src-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-navy);
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+}
+.share-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-navy);
+  border-radius: 999px;
+  padding: 2px 8px;
+  box-shadow: 0 2px 6px rgb(14 27 44 / 0.25);
+}
+
+/* punto caliente: circulo con el numero de episodios a la vista. --c es el color del nivel mas grave, --ink el del numero y --d el diametro */
+.cloud {
+  width: var(--d);
+  height: var(--d);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.cloud:focus-visible {
+  outline: none;
+}
+.cloud > i,
+.cloud > b {
+  position: absolute;
+  border-radius: 50%;
+  transition: opacity 0.2s, scale 0.2s;
+}
+.cloud > i {
+  inset: -8px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--c) 50%, transparent) 52%, transparent 72%);
+  animation: cloud-breathe 3.2s ease-in-out infinite;
+}
+.cloud > b {
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  background: var(--c);
+  color: var(--ink);
+  font: 700 12px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px rgb(14 27 44 / 0.28);
+  animation: cloud-in 0.22s ease-out;
+}
+.cloud:hover > b,
+.cloud:focus-visible > b {
+  scale: 1.1;
+}
+.cloud:focus-visible > b {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+/* varias estaciones cercanas juntas: doble anillo */
+.cloud.is-group > i {
+  inset: -11px;
+}
+.cloud.is-group > b {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 55%, #fff), 0 0 0 4.5px #fff, 0 2px 10px 4px rgb(14 27 44 / 0.22);
+}
+.cloud.is-selected > b {
+  scale: 1.12;
+  box-shadow: 0 0 0 3px var(--color-navy), 0 4px 12px rgb(14 27 44 / 0.35);
+}
+.cloud.is-dim > b {
+  opacity: 0.6;
+  scale: 0.86;
+  box-shadow: none;
+}
+.cloud.is-dim > i,
+.cloud.is-flat > i {
+  display: none;
+}
+@keyframes cloud-breathe {
+  0%, 100% { transform: scale(0.92); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes cloud-in {
+  from { scale: 0.55; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud > i, .cloud > b { animation: none; }
+}
+
+/* lista de estaciones de un grupo que no se separa al acercar */
+.group-pop p {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.group-pop button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: transparent;
+  font: 500 12.5px/1.2 var(--font-sans);
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.group-pop button:hover,
+.group-pop button:focus-visible {
+  background: var(--color-raised);
+}
+.group-pop button > i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.group-pop button > span {
+  flex: 1;
+}
+.group-pop button > b {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+}
+
+/* lugar encontrado con el buscador */
+.place-pin {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgb(14 27 44 / 0.35);
+  pointer-events: none;
+}
+.place-pin::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--color-cyan);
+  animation: place-ping 1.8s ease-out infinite;
+}
+@keyframes place-ping {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(4.2); opacity: 0; }
+}
+
+/* linea de tiempo: dos deslizadores superpuestos; solo los tiradores reciben el puntero */
+.dual-range {
+  position: relative;
+  height: 18px;
+}
+.dual-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.dual-range input[type="range"]::-webkit-slider-runnable-track {
+  height: 18px;
+  background: none;
+}
+.dual-range input[type="range"]::-moz-range-track {
+  background: none;
+}
+.dual-range input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-navy);
+  box-shadow: 0 1px 3px rgb(14 27 44 / 0.3);
+  cursor: grab;
+}
+.dual-range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-navy);
+  box-shadow: 0 1px 3px rgb(14 27 44 / 0.3);
+  cursor: grab;
+}
+

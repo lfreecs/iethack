@@ -1,0 +1,11 @@
+# entorno de Python y cachés
+.venv/
+__pycache__/
+
+# datos crudos y descargas (1,4 GB): se regeneran con los scripts de pipeline/
+data/*
+!data/config/
+
+# claves locales
+.env*
+.vercel

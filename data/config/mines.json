@@ -1,0 +1,153 @@
+{
+ "_fuente_coordenadas": "Sernageomin, Atlas de faenas e instalaciones (servicio Instalaciones_WGS84), rajos activos",
+ "mines": [
+  {
+   "id": "escondida",
+   "name": "Escondida + Zaldívar",
+   "company": "BHP / Antofagasta Minerals",
+   "lat": -24.247,
+   "lon": -69.068,
+   "cochilco": [
+    "Escondida",
+    "Zaldívar"
+   ],
+   "declared": [
+    "escondida_bhp",
+    "zaldivar"
+   ],
+   "note": "Escondida y Zaldívar están a ~5 km: el satélite las ve como una sola zona.",
+   "label": "Escondida",
+   "anchor": "top"
+  },
+  {
+   "id": "spence_sierra_gorda",
+   "name": "Spence + Sierra Gorda",
+   "company": "BHP / KGHM-South32",
+   "lat": -22.823,
+   "lon": -69.299,
+   "cochilco": [
+    "Spence",
+    "Sierra Gorda"
+   ],
+   "declared": [
+    "spence_bhp",
+    "sierra_gorda"
+   ],
+   "note": "Spence y Sierra Gorda están a ~11 km: el satélite las ve como una sola zona. El dato de BHP (Pampa Norte) incluye Cerro Colorado, cerrada en 2023.",
+   "label": "Spence · Sierra Gorda",
+   "anchor": "bottom"
+  },
+  {
+   "id": "centinela",
+   "name": "Centinela",
+   "company": "Antofagasta Minerals",
+   "lat": -22.99,
+   "lon": -69.07,
+   "cochilco": [
+    "Centinela (súlfuros)",
+    "Centinela (óxidos)"
+   ],
+   "declared": [
+    "centinela"
+   ],
+   "label": "Centinela",
+   "anchor": "left"
+  },
+  {
+   "id": "antucoya",
+   "name": "Antucoya",
+   "company": "Antofagasta Minerals",
+   "lat": -22.6455,
+   "lon": -69.8922,
+   "cochilco": [
+    "Antucoya"
+   ],
+   "declared": [
+    "antucoya"
+   ],
+   "note": "Mina más chica: su señal puede ser débil.",
+   "label": "Antucoya",
+   "anchor": "right"
+  },
+  {
+   "id": "collahuasi",
+   "name": "Collahuasi",
+   "company": "Anglo American / Glencore",
+   "lat": -20.983,
+   "lon": -68.67,
+   "cochilco": [
+    "Collahuasi"
+   ],
+   "declared": [
+    "collahuasi"
+   ],
+   "neighbors": [
+    "quebrada_blanca"
+   ],
+   "note": "Quebrada Blanca está a ~14 km.",
+   "label": "Collahuasi",
+   "anchor": "left"
+  },
+  {
+   "id": "quebrada_blanca",
+   "name": "Quebrada Blanca",
+   "company": "Teck",
+   "lat": -21.0057,
+   "lon": -68.8131,
+   "cochilco": [
+    "Quebrada Blanca"
+   ],
+   "declared": [],
+   "neighbors": [
+    "collahuasi"
+   ],
+   "note": "Collahuasi está a ~14 km. Teck no publica emisiones directas separadas para esta mina. Expansión QB2 en operación desde 2023.",
+   "label": "Quebrada Blanca",
+   "anchor": "right"
+  },
+  {
+   "id": "chuquicamata",
+   "name": "Chuquicamata + R. Tomic + M. Hales",
+   "company": "Codelco",
+   "lat": -22.29,
+   "lon": -68.9,
+   "cochilco": [
+    "Chuquicamata",
+    "Radomiro Tomic",
+    "Ministro Hales"
+   ],
+   "cochilco_fallback": [
+    "Chuqui y R.Tomic",
+    "Ministro Hales"
+   ],
+   "declared": [
+    "codelco_norte"
+   ],
+   "note": "Zona con la ciudad de Calama y una fundición: el NO2 no viene solo de camiones.",
+   "label": "Chuquicamata",
+   "anchor": "bottom"
+  },
+  {
+   "id": "los_pelambres",
+   "name": "Los Pelambres",
+   "company": "Antofagasta Minerals",
+   "lat": -31.7157,
+   "lon": -70.4795,
+   "cochilco": [
+    "Los Pelambres"
+   ],
+   "declared": [
+    "los_pelambres"
+   ],
+   "note": "Mina en alta cordillera; nubes y nieve reducen los días con dato.",
+   "label": "Los Pelambres",
+   "anchor": "left"
+  }
+ ],
+ "reference": {
+  "id": "desierto",
+  "name": "Desierto sin fuentes (referencia)",
+  "lat": -25.6,
+  "lon": -69.6
+ }
+}
