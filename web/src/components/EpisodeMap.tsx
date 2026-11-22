@@ -151,7 +151,7 @@ export default function EpisodeMap({ data, events, selected, place, places, left
   const libRef = useRef<typeof import("maplibre-gl") | null>(null);
   const clouds = useRef<Record<string, { el: HTMLElement; marker: Marker }>>({});
   const labels = useRef<Label[]>([]);
-  const view = useRef<{ groups: Group[]; selected: Episode | null }>({ groups: [], selected: null });
+  const view = useRef<{ groups: Group[]; selected: Episode | null; station?: string }>({ groups: [], selected: null });
   const popup = useRef<Popup | null>(null);
   const shareMarkers = useRef<Marker[]>([]);
   const pin = useRef<Marker | null>(null);
@@ -167,7 +167,14 @@ export default function EpisodeMap({ data, events, selected, place, places, left
     const map = mapRef.current;
     const lib = libRef.current;
     if (!map || !lib) return;
-    const { groups, selected: sel } = view.current;
+    const { groups, selected: sel, station } = view.current;
+    const focus = sel?.code ?? station; // estacion del episodio elegido o, si no hay, la de la ficha abierta
+    // clic en una estacion: abre su ficha, con la lista de sus episodios a la vista
+    const openStation = (g: Group) => {
+      const found = live.current.places.find((p) => p.kind === "estación" && p.code === g.code);
+      if (found) live.current.onPlace(found);
+      else live.current.onSelect(g.first);
+    };
 
     // clic en un grupo: acerca hasta separar sus estaciones; si estan casi en el mismo punto, las lista para elegir
     const openGroup = (members: Group[]) => {
@@ -191,14 +198,14 @@ export default function EpisodeMap({ data, events, selected, place, places, left
         row.children[2].textContent = String(g.mine.length);
         row.onclick = () => {
           popup.current?.remove();
-          live.current.onSelect(g.first);
+          openStation(g);
         };
         node.append(row);
       }
       popup.current = new lib.Popup({ offset: 26, closeButton: false, maxWidth: "300px" }).setLngLat([members[0].lon, members[0].lat]).setDOMContent(node).addTo(map);
     };
 
-    const blobs = cluster(groups, (g) => map.project([g.lon, g.lat]), sel?.code);
+    const blobs = cluster(groups, (g) => map.project([g.lon, g.lat]), focus);
     const seen = new Set<string>();
     for (const b of blobs) {
       const worst = worstOf(b.groups.map((g) => g.worst));
@@ -215,20 +222,20 @@ export default function EpisodeMap({ data, events, selected, place, places, left
         const count = `${b.n} ${b.n === 1 ? "episodio" : "episodios"} a la vista`;
         el.title = many
           ? `${members.length} estaciones cercanas (${[...new Set(members.map((g) => g.comuna))].join(", ")}): ${count}. Haz clic para acercar.`
-          : `${members[0].name} (${members[0].comuna}): ${count}`;
+          : `${members[0].name} (${members[0].comuna}): ${count}. Haz clic para ver la lista.`;
         el.setAttribute("aria-label", el.title);
         el.innerHTML = `<i></i><b>${b.n}</b>`;
         el.onclick = (ev) => {
           ev.stopPropagation(); // sin esto el clic llega al mapa, que cierra la lista recien abierta
           if (many) openGroup(members);
-          else live.current.onSelect(members[0].first);
+          else openStation(members[0]);
         };
         clouds.current[key] = { el, marker: new lib.Marker({ element: el, anchor: "center" }).setLngLat(map.unproject([b.x, b.y])).addTo(map) };
       }
-      const on = !!sel && b.groups.some((g) => g.code === sel.code);
+      const on = !!focus && b.groups.some((g) => g.code === focus);
       const { el } = clouds.current[key];
       el.classList.toggle("is-selected", on);
-      el.classList.toggle("is-dim", !!sel && !on);
+      el.classList.toggle("is-dim", !!focus && !on);
       el.style.zIndex = String(on ? 9 : ORDER.length - ORDER.indexOf(worst)); // las mas graves quedan encima
     }
     for (const [key, c] of Object.entries(clouds.current)) {
@@ -397,10 +404,10 @@ export default function EpisodeMap({ data, events, selected, place, places, left
       const lead = mine.find((e) => !e.plateau) ?? mine[0];
       return { code, mine, name: lead.station.trim(), comuna: lead.comuna, lat: lead.lat, lon: lead.lon, first: lead.id, worst: worstOf(mine.map(levelOf)) };
     });
-    view.current = { selected, groups };
+    view.current = { selected, groups, station: place?.kind === "estación" ? place.code : undefined };
     popup.current?.remove();
     layout();
-  }, [events, selected, loaded, layout]);
+  }, [events, selected, place, loaded, layout]);
 
   // Episodio elegido: cono de origen, recorrido del aire y enlaces a cada fuente con su porcentaje
   useEffect(() => {
@@ -439,12 +446,14 @@ export default function EpisodeMap({ data, events, selected, place, places, left
     if (!map || !lib || !loaded || !map.getSource("radio")) return;
     pin.current?.remove();
     pin.current = null;
-    (map.getSource("radio") as GeoJSONSource).setData(place ? circle(place.lat, place.lon, NEAR_KM) : EMPTY);
-    if (!place) return;
+    // con un episodio abierto se muestra su cono, no el radio del lugar
+    (map.getSource("radio") as GeoJSONSource).setData(place && !selected ? circle(place.lat, place.lon, NEAR_KM) : EMPTY);
+    // una estacion con episodios a la vista ya tiene su circulo, que queda resaltado: no se le pone marca encima
+    if (!place || selected || (place.kind === "estación" && events.some((e) => e.code === place.code))) return;
     const el = document.createElement("span");
     el.className = "place-pin";
     pin.current = new lib.Marker({ element: el, anchor: "center" }).setLngLat([place.lon, place.lat]).addTo(map);
-  }, [place, loaded]);
+  }, [place, selected, events, loaded]);
 
   // Camara: vuela al episodio elegido o al lugar buscado, dejando libre el espacio de los paneles
   useEffect(() => {

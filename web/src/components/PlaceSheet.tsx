@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChevronRight, Factory, MapPin, Pickaxe, RadioTower, X, type LucideIcon } from "lucide-react";
-import { LEVELS, NEAR_KM, NORM, distanceKm, fmtDay, levelOf, placeKind, placeName, sourceName, type Attribution, type LevelKey, type Place } from "@/lib/episodes";
+import { LEVELS, NEAR_KM, NORM, distanceKm, fmtDay, levelOf, placeKind, placeName, sourceName, verdictOf, type Attribution, type Episode, type LevelKey, type Place } from "@/lib/episodes";
 import { chart } from "@/lib/chart";
 import { compact, num } from "@/lib/format";
 
 const ICON: Record<Place["kind"], LucideIcon> = { mina: Pickaxe, fuente: Factory, estación: RadioTower, localidad: MapPin };
 const ROWS: LevelKey[] = ["emergencia", "preemergencia", "alerta", "norma", "propuesta", "alza", "plana"];
+/** Episodios de la estacion que se listan antes de pedir "mostrar mas". */
+const PAGE = 20;
 const maxOf = (series?: Record<string, number>) => Math.max(0, ...Object.values(series ?? {}));
 
 type Props = {
   place: Place;
   data: Attribution;
   places: Place[];
+  /** Episodios a la vista en el mapa (nivel y periodo elegidos), del mas grave al menos grave. */
+  visible: Episode[];
   onClose: () => void;
   onEpisode: (id: string) => void;
   onPlace: (p: Place) => void;
@@ -31,8 +35,10 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint: strin
 }
 
 /** Ficha de un lugar buscado: su registro historico de episodios cercanos y, si es una fuente, lo que declara emitir. */
-export default function PlaceSheet({ place, data, places, onClose, onEpisode, onPlace }: Props) {
+export default function PlaceSheet({ place, data, places, visible, onClose, onEpisode, onPlace }: Props) {
   const Icon = ICON[place.kind];
+  const [limit, setLimit] = useState(PAGE);
+  const mine = useMemo(() => (place.kind === "estación" ? visible.filter((e) => e.code === place.code) : []), [place, visible]);
 
   const rec = useMemo(() => {
     const km = (x: { lat: number; lon: number }) => distanceKm(place.lat, place.lon, x.lat, x.lon);
@@ -123,6 +129,39 @@ export default function PlaceSheet({ place, data, places, onClose, onEpisode, on
           </p>
         )}
 
+        {place.kind === "estación" && (
+          <section>
+            <h3 className="text-[13px] font-semibold text-ink">Episodios de esta estación</h3>
+            <p className="text-[11px] leading-snug text-muted">
+              {mine.length
+                ? `${mine.length} con el nivel y el período elegidos, del más grave al menos grave. Elige uno para ver de dónde venía el aire.`
+                : "Ninguno con el nivel y el período elegidos. Baja el nivel mínimo o amplía el período para ver más."}
+            </p>
+            <ul className="mt-1.5 space-y-0.5">
+              {mine.slice(0, limit).map((e) => (
+                <li key={e.id}>
+                  <button onClick={() => onEpisode(e.id)} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-raised">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: LEVELS[levelOf(e)].color }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] text-ink">
+                        {fmtDay(e.peak_time)}, {e.peak_time.slice(11, 16)}
+                      </span>
+                      <span className="block truncate text-[11px] text-muted">{verdictOf(e).short}</span>
+                    </span>
+                    <span className="shrink-0 text-[12.5px] font-semibold tabular-nums text-ink">{num(e.peak, 0)}</span>
+                    <ChevronRight size={14} className="shrink-0 text-faint" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {mine.length > limit && (
+              <button onClick={() => setLimit((n) => n + PAGE)} className="mt-1 w-full rounded-lg py-1.5 text-[12.5px] font-medium text-accent-soft hover:bg-raised">
+                Mostrar más ({mine.length - limit} restantes)
+              </button>
+            )}
+          </section>
+        )}
+
         {rec.events.length > 0 && (
           <>
             <section>
@@ -150,7 +189,7 @@ export default function PlaceSheet({ place, data, places, onClose, onEpisode, on
               </div>
             </section>
 
-            {rec.top.length > 0 && (
+            {place.kind !== "estación" && rec.top.length > 0 && (
               <section>
                 <h3 className="text-[13px] font-semibold text-ink">Casos más graves</h3>
                 <ul className="mt-1.5 space-y-1">

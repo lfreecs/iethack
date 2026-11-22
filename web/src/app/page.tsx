@@ -207,7 +207,7 @@ export default function Home() {
                       </span>
                     </div>
                     <p className="mt-2 text-[10.5px] leading-snug text-muted">
-                      Cada círculo muestra cuántos episodios a la vista se midieron ahí, con el color del más grave. El de doble anillo reúne estaciones cercanas: haz clic para acercar.
+                      Cada círculo muestra cuántos episodios a la vista se midieron ahí, con el color del más grave: haz clic para ver la lista. El de doble anillo reúne estaciones cercanas: haz clic para acercar.
                     </p>
                     <p className="mt-2 text-[10px] leading-snug text-faint">
                       Valores en µg/m³ por hora. Fuentes: SINCA y RETC (Ministerio del Medio Ambiente), SNIFA (SMA), Sernageomin, Open-Meteo, OpenStreetMap, Natural Earth.
@@ -235,7 +235,7 @@ export default function Home() {
                 onStation={stationOf(selected) ? () => pickPlace(stationOf(selected)!) : undefined}
               />
             ) : place ? (
-              <PlaceSheet key={place.id} place={place} data={data} places={places} onClose={clearPlace} onEpisode={(id) => data.events.filter((e) => e.id === id).forEach(openEpisode)} onPlace={pickPlace} />
+              <PlaceSheet key={place.id} place={place} data={data} places={places} visible={visible} onClose={clearPlace} onEpisode={(id) => data.events.filter((e) => e.id === id).forEach(openEpisode)} onPlace={pickPlace} />
             ) : null}
           </>
         )}
