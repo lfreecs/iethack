@@ -1,4 +1,4 @@
-# 4GAS (antes Ojo Satelital del Diésel)
+# 4GEN (antes 4GAS y Ojo Satelital del Diésel)
 
 Hackatón ie&t Chile 2026, track Minería y Sustentabilidad. App web que muestra el NO2 de Sentinel-5P (TROPOMI) sobre las grandes minas a rajo del norte de Chile y lo compara con producción (Cochilco) y con lo que declaran las empresas.
 
@@ -54,10 +54,15 @@ Idea vigente del equipo: detectar episodios de SO2 medidos en tierra (SINCA), at
 - El comando de `exec` se corta cerca de los 8.000 caracteres: los archivos largos hay que escribirlos con la herramienta de escritura, no con heredoc.
 - Círculos del mapa (`layout()` en `EpisodeMap.tsx`): las estaciones cuyos círculos se tocarían en pantalla se juntan en uno de doble anillo (`cluster()`), que se recalcula en cada cambio de zoom; clic en un grupo acerca hasta separarlo y, si las estaciones están casi en el mismo punto, abre una lista. La estación del episodio elegido nunca se junta. Las etiquetas de fuentes y ciudades buscan sitio libre o se ocultan. Estilos en `.cloud` de `globals.css`.
 - Logo: `web/public/logo.png` (fondo transparente, recortado de la imagen que entregó el equipo) y `web/src/app/favicon.ico`; se usa en `TopNav.tsx`.
-- Nombre del proyecto: 4GAS (encabezado en `TopNav.tsx` y título en `layout.tsx`). El repositorio es `lfreecs/iethack` y Vercel publica desde `web/`.
+- Nombre del proyecto: 4GEN (encabezado en `TopNav.tsx` y título en `layout.tsx`). El repositorio es `lfreecs/iethack` y Vercel publica desde `web/`.
 - Teléfono (menos de 1024 px de ancho, `useMedia(NARROW)` en `lib/useMedia.ts`): el panel de episodios es una hoja inferior que parte minimizada y lleva dentro los filtros (`FilterDock embedded`); las fichas ocupan el 58 % inferior (`SHEET_FRAC` en `EpisodeMap.tsx` debe coincidir con `h-[58dvh]`); se ocultan los botones de zoom. El espacio libre del mapa lo calcula `padFor()`.
 - `scripts/shot.mjs` acepta `--mobile=1` (emula teléfono táctil) y pasos `click:x,y` y `tap:x,y` para probar clics reales sobre el mapa.
 - Estación La Negra (red de Altonorte, 3 km al norte de la fundición): no está en SINCA. `pipeline/snifa_altonorte.py` baja de SNIFA las planillas mensuales de seguimiento ambiental (unidad fiscalizable 674, RCA 39/2000) y deja SO2 y viento con el formato de SINCA (`data/raw/sinca/*_SNIFA_LNE_h.csv`); `episodios.py` la suma con `EXTRA` y estado "informado por la empresa". Viene en ppb (×2,62 a µg/m3N). Solo marzo 2022 a septiembre 2026: antes las planillas vienen en .zip/.7z y no se leen. SNIFA responde 429 con más de 3 hilos. Orden: `snifa_altonorte.py` -> `episodios.py` -> `atribucion.py` -> `build_places.py`.
 - Totales con La Negra: 795 episodios desde 150 µg/m3 en 24 de 28 estaciones; 55 sobre la norma (350).
 - Clic en el círculo de una estación: abre su ficha (`PlaceSheet`) con la lista de sus episodios a la vista (`visible`, mismos filtros del mapa); desde ahí se abre cada episodio y "Ver el registro de esta estación" vuelve a la lista. El círculo de la estación abierta queda resaltado (`view.current.station`).
 - Vercel: la CLI está instalada pero sin sesión (`vercel whoami` dice "Logged out"); el despliegue lo hace el usuario importando `lfreecs/iethack` con Root Directory `web`.
+
+## PROBLEMAS DE DATOS DETECTADOS (22 nov, sin corregir todavía)
+- Unidades: la ficha de cada estación en SINCA (`data/raw/sinca/estacion_*.html`, texto "Dióxido de azufre (SO2 - ppb)" o "(SO2 - μg/m3N)") dice en qué unidad viene la serie. 19 de las 27 estaciones de SINCA cargadas vienen en ppb (todo Calama, Super Site y Escuela E-10 de Tocopilla, toda la red de Guacolda, Copiapó Sivica) y `episodios.py` las trata como µg/m3N. Hay que multiplicar por 2,62. Comprobado en Quintero: 506 ppb en SINCA = 1.327 µg/m3N oficial (SMA, 6 jun 2022). En µg/m3N: Antofagasta, Gobernación, red de Paipote (ENAMI), Huasco II. La Negra (SNIFA) ya está convertida.
+- Calibraciones: en la red de Guacolda (SM1-SM8, EME F, EME M), Huasco II y Tocopilla (Gobernación, Super Site, Escuela E-10) casi todos los "episodios" duran 1 hora, ocurren de lunes a viernes entre 08 y 17 h (0-8 % en fin de semana, contra 29 % esperado) y recorren las estaciones en secuencia el mismo día: son chequeos de calibración en datos no validados, no plumas. Las estaciones con patrón de pluma real (29-42 % en fin de semana) son Calama, la red de Paipote y La Negra.
+- Consecuencia: los totales (795 episodios, 55 sobre la norma), "Guacolda fuente más repetida" y los casos de "origen compartido" de Tocopilla no son confiables. Siguen firmes La Negra y Paipote.

@@ -3,7 +3,7 @@ import "@fontsource-variable/inter/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "4GAS",
+  title: "4GEN",
   description: "Alerta y atribución de episodios de dióxido de azufre en el norte de Chile.",
 };
 

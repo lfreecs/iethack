@@ -16,7 +16,7 @@ export default function TopNav({ active }: Props) {
       <Link href="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3">
         <Image src="/logo.png" alt="" width={40} height={40} unoptimized priority className="size-9 shrink-0 sm:size-10" />
         <span className="min-w-0">
-          <span className="block text-[15px] font-semibold leading-tight tracking-tight text-ink">4GAS</span>
+          <span className="block text-[15px] font-semibold leading-tight tracking-tight text-ink">4GEN</span>
           <span className="hidden text-[11px] text-muted md:block">Alerta y atribución de episodios de dióxido de azufre · norte de Chile</span>
         </span>
       </Link>
